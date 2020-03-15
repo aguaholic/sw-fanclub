@@ -1,29 +1,33 @@
-var createError = require('http-errors');
-var express = require('express');
+const express = require("express")
+const axios = require('axios')
 
-var indexRouter = require('./routes/index');
+const PORT = process.env.PORT || 3000
+const app = express()
 
-var app = express();
+app.set("json spaces", 2)
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.get("/", (req, res) => {
+    res.send("Welcome to your App!")
+})
 
-app.use('/', indexRouter);
+app.get("/characters", (req, res) => {
+    let searchTerm = req.query.search
 
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-    next(createError(404));
-});
+    axios.get("https://swapi.co/api/films?search=" + searchTerm)
+        .then(response => {
+            let allCharacters = response.data.results.map(film => film.characters)
+            let personsOneMovie =  allCharacters[0]
+            let promisesOfPersons = personsOneMovie.map(person => 
+                axios.get(person).then(result => result.data)
+            )
+            Promise.all(promisesOfPersons)
+                .then(people => res.json(people))
+            })
+        .catch(error => {
+            res.json("Error ocurred")
+        })
+})
 
-// error handler
-app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-    res.locals.message = err.message;
-    res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-  // render the error page
-    res.status(err.status || 500);
-    res.render('error');
-});
-
-module.exports = app;
+app.listen(PORT, function () {
+    console.log(`Express server listening on port ${PORT}`)
+})
