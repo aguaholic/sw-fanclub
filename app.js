@@ -12,6 +12,7 @@ app.get("/", (req, res) => {
 
 app.get("/characters", (req, res) => {
     let searchTerm = req.query.search
+    let sortDirection = req.query.order
 
     axios.get("https://swapi.co/api/films?search=" + searchTerm)
         .then(response => {
@@ -21,7 +22,15 @@ app.get("/characters", (req, res) => {
                 axios.get(person).then(result => result.data)
             )
             Promise.all(promisesOfPersons)
-                .then(people => res.json(people))
+                .then(people => {
+                    if (sortDirection === 'ASC') {
+                        let ascSorting = people.sort((a, b) => a.height - b.height)
+                    }
+                    else if (sortDirection === 'DESC') {
+                        let descSorting = people.sort((a, b) => b.height - a.height)
+                    }
+                    res.json(people)
+                })
             })
         .catch(error => {
             res.json("Error ocurred")
