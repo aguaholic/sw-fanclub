@@ -11,24 +11,22 @@ app.get("/", (req, res) => {
 })
 
 app.get("/characters", (req, res) => {
-    let searchTerm = req.query.search
-    let sortDirection = req.query.order
+    const searchTerm = req.query.search ? '?search=' + req.query.search : ""
+    const sortDirection = req.query.order
 
-    axios.get("https://swapi.co/api/films?search=" + searchTerm)
+    if(!searchTerm) { throw new Error('Add a search term')}
+    
+    axios.get("https://swapi.co/api/films" + searchTerm)
         .then(response => {
-            let allCharacters = response.data.results.map(film => film.characters)
-            let personsOneMovie =  allCharacters[0]
-            let promisesOfPersons = personsOneMovie.map(person => 
+            const allCharacters = response.data.results.map(film => film.characters)
+            const personsOneMovie =  allCharacters[0]
+            const promisesOfPersons = personsOneMovie.map(person => 
                 axios.get(person).then(result => result.data)
             )
             Promise.all(promisesOfPersons)
                 .then(people => {
-                    if (sortDirection === 'ASC') {
-                        let ascSorting = people.sort((a, b) => a.height - b.height)
-                    }
-                    else if (sortDirection === 'DESC') {
-                        let descSorting = people.sort((a, b) => b.height - a.height)
-                    }
+                    if (sortDirection === 'ASC') people.sort((a, b) => a.height - b.height)
+                    if (sortDirection === 'DESC') people.sort((a, b) => b.height - a.height)
                     res.json(people)
                 })
             })
