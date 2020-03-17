@@ -40,7 +40,7 @@ app.get("/characters", (req, res) => {
                 })
             })
         .catch(error => {
-            res.json("Error ocurred")
+            throw new Error('Error')
         })
 })
 
